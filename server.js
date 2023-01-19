@@ -3,7 +3,7 @@ const path = require("path");
 const { get } = require("request");
 var mysql = require("mysql");
 const { getUser, insertUser } = require("./scripts/dbOperations.js");
-
+var cors = require("cors");
 const multer = require("multer");
 
 const storage = multer.diskStorage({
@@ -24,7 +24,7 @@ var con = mysql.createConnection({
 });
 
 const app = express();
-
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,29 +34,8 @@ app.use(express.static(path.join(__dirname, "./public")));
 app.use(express.static(path.join(__dirname, "./weights")));
 app.use(express.static(path.join(__dirname, "./dist")));
 
-app.get("/", (req, res) => res.redirect("/index"));
-
-app.get("/index", (req, res) =>
-  res.sendFile(path.join(viewsDir, "prueba2.html"))
-);
-
-app.get("/face_recognition", (req, res) =>
-  res.sendFile(path.join(viewsDir, "faceRecognition.html"))
-);
-
-app.get("/fake_recognition", (req, res) =>
-  res.sendFile(path.join(viewsDir, "fake_recognition.html"))
-);
-
-app.get("/home", (req, res) =>
-  res.sendFile(path.join(viewsDir, "mainPage.html"))
-);
-
-app.get("/regist", (req, res) =>
-  res.sendFile(path.join(viewsDir, "regist.html"))
-);
-
 app.post("/login", (req, res) => {
+  console.log("Entro");
   const username = req.body.username;
   const password = req.body.password;
   getUser(con, { username, password }, (result) => {
@@ -77,20 +56,6 @@ app.post("/getImage", (req, res) => {
   console.log(req.body);
   const name = req.body.name;
   res.sendFile(`D:\\Repositorios\\Tesis\\Tesis\\uploads\\${name}.jpeg`);
-});
-
-app.post("/fetch_external_image", async (req, res) => {
-  const { imageUrl } = req.body;
-  if (!imageUrl) {
-    return res.status(400).send("imageUrl param required");
-  }
-  try {
-    const externalResponse = await request(imageUrl);
-    res.set("content-type", externalResponse.headers["content-type"]);
-    return res.status(202).send(Buffer.from(externalResponse.body));
-  } catch (err) {
-    return res.status(404).send(err.toString());
-  }
 });
 
 app.post("/registUser", (req, res) => {
