@@ -2,7 +2,20 @@ const express = require("express");
 const path = require("path");
 const { get } = require("request");
 var mysql = require("mysql");
-const { getUser } = require("./scripts/dbOperations.js");
+const { getUser, insertUser } = require("./scripts/dbOperations.js");
+
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 var con = mysql.createConnection({
   host: "localhost",
@@ -50,9 +63,20 @@ app.post("/login", (req, res) => {
     if (result.length == 1) {
       res.status(200).json({ isUser: true });
     } else {
-      res.status(200).json({ isUser: false });
+      res.status(201).json({ isUser: false });
     }
   });
+});
+
+app.post("/uploadImage", upload.single("image"), (req, res) => {
+  console.log(req.file);
+  res.send("ok");
+});
+
+app.post("/getImage", (req, res) => {
+  console.log(req.body);
+  const name = req.body.name;
+  res.sendFile(`D:\\Repositorios\\Tesis\\Tesis\\uploads\\${name}.jpeg`);
 });
 
 app.post("/fetch_external_image", async (req, res) => {
@@ -67,6 +91,14 @@ app.post("/fetch_external_image", async (req, res) => {
   } catch (err) {
     return res.status(404).send(err.toString());
   }
+});
+
+app.post("/registUser", (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
+  insertUser(con, { username, password }, (result) => {
+    res.status(200).end("ok");
+  });
 });
 
 app.listen(3000, () => console.log("Listening on port 3000!"));

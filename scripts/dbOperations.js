@@ -8,7 +8,16 @@ function getUser(connection, user, callback) {
     if (err) throw err;
     callback(result);
   });
-  connection.end();
 }
 
-module.exports = { getUser };
+function insertUser(connection, user, callback) {
+  let partial_query =
+    "INSERT INTO login_face.user (username, password) VALUES (?, ?);";
+  let query = mysql.format(partial_query, [user.username, user.password]);
+  connection.query(query, function (err, result) {
+    if (err) throw err;
+    callback(result);
+  });
+}
+
+module.exports = { getUser,insertUser };
